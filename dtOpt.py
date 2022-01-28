@@ -32,36 +32,42 @@ dot_data = tree.export_graphviz(dtree, out_file=None,
 graph = graphviz.Source(dot_data, format="png")
 graph
 
-nodes = dtree.tree_.apply(X.to_numpy().astype(np.float32))
+nodes = dtree.apply(X)
 raw['_nodes_'] = nodes
+raw['bad_amt'] = raw['bad'] * raw['loan_amt']
 
 nodes_agg = raw.groupby('_nodes_').agg(
     n_samp=('bad', np.size),
     n_bad=('bad', np.sum),
-    loan_amt=('loan_amt', np.sum)
+    bad_amt=('bad_amt', np.sum)
 )
 
 pl.listSolvers(onlyAvailable=True)
 solver = pl.GLPK_CMD()
 
-# n = range(nodes_agg.shape[0])
+BAD_RATIO_LMT = 0.1
+BAD_AMT_RATIO = 5e6
 
 prob = pl.LpProblem("Decison_Tree_Nodes_Selection", sense=pl.LpMaximize)
-w = [pl.LpVariable("w"+str(i), 0, 1, pl.LpBinary) \
-    for i in nodes_agg.index]
-prob += pl.lpSum([nodes_agg.n_samp[i] * w[j] \
-    for j, i in enumerate(nodes_agg.index)
-])
-prob += pl.lpSum([nodes_agg.n_bad[i] * w[j] \
-    for j, i in enumerate(nodes_agg.index)
-]) <= pl.lpSum([nodes_agg.n_samp[i] * w[j] \
-    for j, i in enumerate(nodes_agg.index)]) * .1
-prob += pl.lpSum([nodes_agg.loan_amt[i] * w[j] \
-    for j, i in enumerate(nodes_agg.index)]) <= 5e8
+w = [pl.LpVariable("w"+str(i), 0, 1, pl.LpBinary)
+     for i in nodes_agg.index]
+prob += pl.lpSum([nodes_agg.n_samp[i] * w[j]
+                  for j, i in enumerate(nodes_agg.index)
+                  ])
+prob += pl.lpSum([nodes_agg.n_bad[i] * w[j]
+                  for j, i in enumerate(nodes_agg.index)]) \
+    <= pl.lpSum([nodes_agg.n_samp[i] * w[j]
+                 for j, i in enumerate(nodes_agg.index)]) * BAD_RATIO_LMT
+prob += pl.lpSum([nodes_agg.bad_amt[i] * w[j]
+                  for j, i in enumerate(nodes_agg.index)]) <= BAD_AMT_RATIO
 
 prob.writeLP("dtOpt.lp")
 prob.solve(solver)
 print("Status:", pl.LpStatus[prob.status])
 
-for v in prob.variables():
-    print(v.name, "=", v.varValue)
+wd = {wi.name: wi.value() for wi in w}
+
+print(wd)
+print("bad rate:", np.dot(nodes_agg.n_bad, list(wd.values()))
+      / np.dot(nodes_agg.n_samp, list(wd.values())))
+print("loss amt:", np.dot(nodes_agg.bad_amt, list(wd.values())))
