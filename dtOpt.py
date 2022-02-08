@@ -65,7 +65,6 @@ prob.solve(solver)
 print('Status:', pl.LpStatus[prob.status])
 
 wd = {wi.name: wi.value() for wi in w}
-
 print(wd)
 print('bad rate:', np.dot(nodes_agg.n_bad, list(wd.values()))
       / np.dot(nodes_agg.n_samp, list(wd.values())))
