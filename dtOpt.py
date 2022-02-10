@@ -41,8 +41,8 @@ nodes_agg = raw.groupby('_nodes_').agg(
     bad_amt=('bad_amt', np.sum)
 )
 
-pl.listSolvers(onlyAvailable=True)
-solver = pl.GLPK_CMD()
+# pl.listSolvers(onlyAvailable=True)
+solver = pl.GLPK_CMD(path='C:\\opt\\glpk-4.65\\w64\\glpsol.exe')
 
 BAD_RATIO_LMT = 0.1
 BAD_AMT_RATIO = 5e6
@@ -61,7 +61,7 @@ prob += pl.lpSum([nodes_agg.bad_amt[i] * w[j]
                   for j, i in enumerate(nodes_agg.index)]) <= BAD_AMT_RATIO
 
 prob.writeLP('dtOpt.lp')
-prob.solve(pl.GLPK_CMD(path = 'C:\\opt\\glpk-4.65\\w64\\glpsol.exe'))
+prob.solve(solver)
 print('Status:', pl.LpStatus[prob.status])
 
 wd = {wi.name: wi.value() for wi in w}
