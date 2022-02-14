@@ -2,6 +2,7 @@ import string
 import numpy as np
 import pandas as pd
 import pulp as pl
+import scipy.optimize as opt
 
 PLATFORM_FEE_RATE = 0.3
 
@@ -101,3 +102,16 @@ if pl.LpStatus[prob2.status] == 'Optimal':
     print('[约束] FTP扣除前利率: ', np.round(c4.value(), 3),
           ' (', MIN_PROFIT_RATE, ')', sep='')
     print('[目标] 放款金额: ', np.round(obj.value(), 2), sep='')
+
+
+constrains = (
+      {'type': 'eq', 'fun': lambda p: np.sum(p) - 1.0},
+      {'type': 'ineq', 'fun': lambda p: p[1] - 0.2},
+      {'type': 'ineq', 'fun': lambda p: p[2] - 0.2},
+      {'type': 'ineq', 'fun': lambda p: p[3] - 0.35},
+      {'type': 'ineq', 'fun': lambda p: np.dot(ch_stat['模型通过率'], p) - MIN_APPROVAL_RATE},
+      {'type': 'ineq', 'fun': lambda p: -np.dot(ch_stat['损失率'], p) + MAX_LOSS_RATE},
+      {'type': 'ineq', 'fun': lambda p: np.dot(ch_stat['加权利率'], p) - MIN_WEIGHTED_INTEREST_RATE}
+)
+
+bnds = 

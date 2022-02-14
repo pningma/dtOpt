@@ -41,8 +41,9 @@ nodes_agg = raw.groupby('_nodes_').agg(
     bad_amt=('bad_amt', np.sum)
 )
 
-# pl.listSolvers(onlyAvailable=True)
-solver = pl.GLPK_CMD(path='C:\\opt\\glpk-4.65\\w64\\glpsol.exe')
+pl.listSolvers(onlyAvailable=True)
+# solver = pl.GLPK_CMD(path='C:\\opt\\glpk-4.65\\w64\\glpsol.exe')
+solver = pl.PULP_CBC_CMD()
 
 BAD_RATIO_LMT = 0.1
 BAD_AMT_RATIO = 5e6
