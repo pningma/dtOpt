@@ -19,7 +19,7 @@ ch_stat['FTP扣除前利润率'] = ch_stat['FTP扣除前利润'] / ch_stat['放�
 solver = pl.PULP_CBC_CMD()
 rng = range(ch_stat.shape[0])
 
-MIN_APPROVAL_RATE = 0.7
+MIN_APPROVAL_RATE = 0.72
 MAX_LOSS_RATE = 0.025
 MIN_WEIGHTED_INTEREST_RATE = 0.13
 
