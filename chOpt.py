@@ -1,6 +1,7 @@
-import pulp as pl
 import numpy as np
 import pandas as pd
+import pulp as pl
+import string
 
 PLATFORM_FEE_RATE = 0.3
 
@@ -23,7 +24,7 @@ rng = range(ch_stat.shape[0])
 
 # 第一个优化问题，优化FTP扣除前利润
 prob1 = pl.LpProblem('Loan_Channel_Allocation_1', sense=pl.LpMaximize)
-p = [pl.LpVariable('p_'+str(i), 0, 1) for i in 'ABCD']
+p = [pl.LpVariable('p_'+string.ascii_uppercase[i], 0, 1) for i in rng]
 # 目标
 obj = pl.lpSum([ch_stat['FTP扣除前利润'][i] * p[i] for i in rng])
 prob1 += obj
@@ -61,7 +62,7 @@ if pl.LpStatus[prob1.status] == 'Optimal':
 
 # 第二个优化问题，优化放款金额
 prob2 = pl.LpProblem('Loan_Channel_Allocation_2', sense=pl.LpMaximize)
-p = [pl.LpVariable('p_'+str(i), 0, 1) for i in 'ABCD']
+p = [pl.LpVariable('p_'+string.ascii_uppercase[i], 0, 1) for i in rng]
 # 目标
 obj = pl.lpSum([ch_stat['放款金额'][i] * p[i] for i in rng])
 prob2 += obj
