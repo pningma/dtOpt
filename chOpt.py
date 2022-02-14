@@ -1,7 +1,7 @@
+import string
 import numpy as np
 import pandas as pd
 import pulp as pl
-import string
 
 PLATFORM_FEE_RATE = 0.3
 
@@ -49,7 +49,7 @@ prob1.solve(solver)
 print('Status:', pl.LpStatus[prob1.status])
 # 打印结果
 if pl.LpStatus[prob1.status] == 'Optimal':
-    p_opt1 = {pi.name: pi.value() for pi in p}
+    p_opt1 = {pi.name: np.round(pi.value(), 3) for pi in p}
     print(p_opt1)
     print('[约束] 总体通过率: ', np.round(c1.value(), 3),
           ' (', MIN_APPROVAL_RATE, ')', sep='')
@@ -90,7 +90,7 @@ prob2.solve(solver)
 print('Status:', pl.LpStatus[prob2.status])
 # 打印结果
 if pl.LpStatus[prob2.status] == 'Optimal':
-    p_opt2 = {pi.name: pi.value() for pi in p}
+    p_opt2 = {pi.name: np.round(pi.value(), 3) for pi in p}
     print(p_opt2)
     print('[约束] 总体通过率: ', np.round(c1.value(), 3),
           ' (', MIN_APPROVAL_RATE, ')', sep='')
