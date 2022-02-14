@@ -37,9 +37,9 @@ MIN_APPROVAL_RATE = 0.72
 MAX_LOSS_RATE = 0.025
 MIN_WEIGHTED_INTEREST_RATE = 0.13
 
-c1 = pl.lpSum([ch_stat['模型通过率'][i] * p[i] for i in rng]) 
+c1 = pl.lpSum([ch_stat['模型通过率'][i] * p[i] for i in rng])
 prob1 += c1 >= MIN_APPROVAL_RATE
-c2 = pl.lpSum([ch_stat['损失率'][i] * p[i] for i in rng]) 
+c2 = pl.lpSum([ch_stat['损失率'][i] * p[i] for i in rng])
 prob1 += c2 <= MAX_LOSS_RATE
 c3 = pl.lpSum([ch_stat['加权利率'][i] * p[i] for i in rng])
 prob1 += c3 >= MIN_WEIGHTED_INTEREST_RATE
@@ -50,9 +50,12 @@ print('Status:', pl.LpStatus[prob1.status])
 if pl.LpStatus[prob1.status] == 'Optimal':
     p_opt1 = {pi.name: pi.value() for pi in p}
     print(p_opt1)
-    print('[约束] 总体通过率: ', np.round(c1.value(), 3), ' (', MIN_APPROVAL_RATE, ')', sep='')
-    print('[约束] 总体损失率: ', np.round(c2.value(), 3), ' (', MAX_LOSS_RATE, ')', sep='')
-    print('[约束] 总体加权利率: ', np.round(c3.value(), 3), ' (', MIN_WEIGHTED_INTEREST_RATE, ')', sep='')
+    print('[约束] 总体通过率: ', np.round(c1.value(), 3),
+          ' (', MIN_APPROVAL_RATE, ')', sep='')
+    print('[约束] 总体损失率: ', np.round(c2.value(), 3),
+          ' (', MAX_LOSS_RATE, ')', sep='')
+    print('[约束] 总体加权利率: ', np.round(c3.value(), 3),
+          ' (', MIN_WEIGHTED_INTEREST_RATE, ')', sep='')
     print('[目标] FTP扣除前利润: ', np.round(obj.value(), 2), sep='')
 
 
@@ -88,8 +91,12 @@ print('Status:', pl.LpStatus[prob2.status])
 if pl.LpStatus[prob2.status] == 'Optimal':
     p_opt2 = {pi.name: pi.value() for pi in p}
     print(p_opt2)
-    print('[约束] 总体通过率: ', np.round(c1.value(), 3), ' (', MIN_APPROVAL_RATE, ')', sep='')
-    print('[约束] 总体损失率: ', np.round(c2.value(), 3), ' (', MAX_LOSS_RATE, ')', sep='')
-    print('[约束] 总体加权利率: ', np.round(c3.value(), 3), ' (', MIN_WEIGHTED_INTEREST_RATE, ')', sep='')
-    print('[约束] FTP扣除前利率: ', np.round(c4.value(), 3), ' (', MIN_PROFIT_RATE, ')', sep='')
+    print('[约束] 总体通过率: ', np.round(c1.value(), 3),
+          ' (', MIN_APPROVAL_RATE, ')', sep='')
+    print('[约束] 总体损失率: ', np.round(c2.value(), 3),
+          ' (', MAX_LOSS_RATE, ')', sep='')
+    print('[约束] 总体加权利率: ', np.round(c3.value(), 3),
+          ' (', MIN_WEIGHTED_INTEREST_RATE, ')', sep='')
+    print('[约束] FTP扣除前利率: ', np.round(c4.value(), 3),
+          ' (', MIN_PROFIT_RATE, ')', sep='')
     print('[目标] 放款金额: ', np.round(obj.value(), 2), sep='')
