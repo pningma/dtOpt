@@ -6,7 +6,7 @@ from scipy.optimize import linprog
 
 PLATFORM_FEE_RATE = 0.3
 
-ch_stat = pd.read_csv('chopt.csv', encoding='utf-8')
+ch_stat = pd.read_csv('data/chopt.csv', encoding='utf-8')
 ch_stat['进件占比'] = ch_stat['进件数'] / ch_stat['进件数'].sum()
 ch_stat['客户占比'] = ch_stat['客户数'] / ch_stat['客户数'].sum()
 ch_stat['模型通过率'] = ch_stat['客户数'] / ch_stat['进件数']
