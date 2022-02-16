@@ -2,7 +2,7 @@ import string
 import numpy as np
 import pandas as pd
 import pulp as pl
-import scipy.optimize as spo
+from scipy.optimize import linprog
 
 PLATFORM_FEE_RATE = 0.3
 
@@ -19,12 +19,13 @@ ch_stat['FTP扣除前利润率'] = ch_stat['FTP扣除前利润'] / ch_stat['放�
 
 ch_stat.head()
 
-# pl.listSolvers(onlyAvailable=True)
-solver = pl.PULP_CBC_CMD()
 n = ch_stat.shape[0]
 rng = range(n)
 
 # Pulp 实现
+# pl.listSolvers(onlyAvailable=True)
+solver = pl.PULP_CBC_CMD()
+
 # 第一个优化问题，优化FTP扣除前利润
 prob1 = pl.LpProblem('Loan_Channel_Allocation_1', sense=pl.LpMaximize)
 p = [pl.LpVariable('p_'+string.ascii_uppercase[i], 0, 1) for i in rng]
@@ -49,7 +50,7 @@ c3 = pl.lpSum([ch_stat['加权利率'][i] * p[i] for i in rng])
 prob1 += c3 >= MIN_WEIGHTED_INTEREST_RATE
 # 求解
 prob1.solve(solver)
-print('Status:', pl.LpStatus[prob1.status])
+# print('Status:', pl.LpStatus[prob1.status])
 # 打印结果
 if pl.LpStatus[prob1.status] == 'Optimal':
     p_opt1 = {pi.name: np.round(pi.value(), 3) for pi in p}
@@ -90,7 +91,7 @@ c4 = pl.lpSum([ch_stat['FTP扣除前利润率'][i] * p[i] for i in rng])
 prob2 += c4 >= MIN_PROFIT_RATE
 # 求解
 prob2.solve(solver)
-print('Status:', pl.LpStatus[prob2.status])
+# print('Status:', pl.LpStatus[prob2.status])
 # 打印结果
 if pl.LpStatus[prob2.status] == 'Optimal':
     p_opt2 = {pi.name: np.round(pi.value(), 3) for pi in p}
@@ -108,75 +109,37 @@ if pl.LpStatus[prob2.status] == 'Optimal':
 
 # 另一种实现，scipy.optimization
 # 第一个优化问题，优化FTP扣除前利润
-# MIN_APPROVAL_RATE = 0.72
-# MAX_LOSS_RATE = 0.025
-# MIN_WEIGHTED_INTEREST_RATE = 0.13
+MIN_APPROVAL_RATE = 0.72
+MAX_LOSS_RATE = 0.025
+MIN_WEIGHTED_INTEREST_RATE = 0.13
 
-# cons1 = (
-#     {'type': 'eq', 'fun': lambda p: np.sum(p) - 1},
-#     # {'type': 'ineq', 'fun': lambda p: p[1] - 0.2},
-#     # {'type': 'ineq', 'fun': lambda p: p[2] - 0.2},
-#     # {'type': 'ineq', 'fun': lambda p: p[3] - 0.35},
-#     {'type': 'ineq', 'fun': lambda p: np.dot(
-#         ch_stat['模型通过率'], p) - MIN_APPROVAL_RATE},
-#     {'type': 'ineq', 'fun': lambda p: -
-#      np.dot(ch_stat['损失率'], p) + MAX_LOSS_RATE},
-#     {'type': 'ineq', 'fun': lambda p: np.dot(
-#         ch_stat['加权利率'], p) - MIN_WEIGHTED_INTEREST_RATE}
-# )
-
-# bnds = [(0, 0.25), (0.2, 1), (0.2, 1), (0.35, 1)]
-# # bnds = [(0, 1) for _ in rng]
-
-
-# def opt_fun1(p):
-#     return -np.dot(ch_stat['FTP扣除前利润'], p)
-
-
-# init_weights = np.array([1/n] * n)
-
-# opt1 = spo.minimize(
-#     opt_fun1, init_weights,
-#     method='trust-constr', hess=lambda x: np.zeros((n, n)),
-#     bounds=bnds, constraints=cons1,
-#     #     options={'ftol': 1e-4, 'maxiter': 1000}
-# )
-
-# if opt1['success']:
-#     print(np.round(opt1['x'], 3))
+c = np.array(-ch_stat['FTP扣除前利润'])
+A_ub = np.array([-ch_stat['模型通过率'], ch_stat['损失率'], -ch_stat['加权利率']])
+b_ub = np.array([-MIN_APPROVAL_RATE, MAX_LOSS_RATE, -
+                MIN_WEIGHTED_INTEREST_RATE])
+A_eq = np.array([[1] * n])
+b_eq = np.array([1])
+opt1 = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=(
+    (0, 0.25), (0.2, 1), (0.2, 1), (0.35, 1)))
+if opt1['success']:
+    print("weights:", list(np.round(opt1['x'], 3)))
+    print("target:", np.round(-opt1['fun'], 2))
 
 # # 第二个优化问题，优化放款金额
-# MIN_APPROVAL_RATE = 0.7
-# MAX_LOSS_RATE = 0.025
-# MIN_WEIGHTED_INTEREST_RATE = 0.13
-# MIN_PROFIT_RATE = 0.07
+MIN_APPROVAL_RATE = 0.7
+MAX_LOSS_RATE = 0.025
+MIN_WEIGHTED_INTEREST_RATE = 0.13
+MIN_PROFIT_RATE = 0.07
 
-# cons2 = (
-#     {'type': 'eq', 'fun': lambda p: np.sum(p) - 1},
-#     # {'type': 'ineq', 'fun': lambda p: p[1] - 0.2},
-#     # {'type': 'ineq', 'fun': lambda p: p[2] - 0.2},
-#     # {'type': 'ineq', 'fun': lambda p: p[3] - 0.35},
-#     {'type': 'ineq', 'fun': lambda p: np.dot(
-#         ch_stat['模型通过率'], p) - MIN_APPROVAL_RATE},
-#     {'type': 'ineq', 'fun': lambda p: -
-#      np.dot(ch_stat['损失率'], p) + MAX_LOSS_RATE},
-#     {'type': 'ineq', 'fun': lambda p: np.dot(
-#         ch_stat['加权利率'], p) - MIN_WEIGHTED_INTEREST_RATE},
-#     {'type': 'ineq', 'fun': lambda p: np.dot(
-#         ch_stat['FTP扣除前利润率'], p) - MIN_PROFIT_RATE}
-# )
-
-
-# def opt_fun2(p):
-#     return -np.dot(ch_stat['放款金额'], p)
-
-
-# opt2 = spo.minimize(
-#     opt_fun2, init_weights,
-#     method='trust-constr', hess=lambda x: np.zeros((n, n)),
-#     bounds=bnds, constraints=cons2,
-#     options={'maxiter': 5000}
-# )
-
-# if opt2['success']:
-#     print(np.round(opt2['x'], 3))
+c = np.array(-ch_stat['放款金额'])
+A_ub = np.array([-ch_stat['模型通过率'], ch_stat['损失率'], -
+                ch_stat['加权利率'], -ch_stat['FTP扣除前利润率']])
+b_ub = np.array([-MIN_APPROVAL_RATE, MAX_LOSS_RATE, -
+                MIN_WEIGHTED_INTEREST_RATE, -MIN_PROFIT_RATE])
+A_eq = np.array([[1] * n])
+b_eq = np.array([1])
+opt2 = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds=(
+    (0, 0.25), (0.2, 1), (0.2, 1), (0.35, 1)))
+if opt2['success']:
+    print("weights:", list(np.round(opt2['x'], 3)))
+    print("target:", np.round(-opt2['fun'], 2))
