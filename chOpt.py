@@ -19,7 +19,7 @@ ch_stat['FTP扣除前利润率'] = ch_stat['FTP扣除前利润'] / ch_stat['放�
 
 ch_stat.head()
 
-n = ch_stat.shape[0]
+n = ch_stat.shape[0]  # pylint: disable=maybe-no-member
 rng = range(n)
 
 # Pulp 实现
