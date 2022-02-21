@@ -61,7 +61,7 @@ prob += pl.lpSum([nodes_agg.n_bad[i] * w[j]
 prob += pl.lpSum([nodes_agg.bad_amt[i] * w[j]
                   for j, i in enumerate(nodes_agg.index)]) <= BAD_AMT_RATIO
 
-prob.writeLP('dtOpt.lp')
+prob.writeLP('dt_opt.lp')
 prob.solve(solver)
 print('Status:', pl.LpStatus[prob.status])
 
