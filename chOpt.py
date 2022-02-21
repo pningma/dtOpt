@@ -1,3 +1,4 @@
+import encodings
 import string
 import numpy as np
 import pandas as pd
@@ -16,6 +17,8 @@ ch_stat['利息收入'] = ch_stat['放款金额'] * ch_stat['加权利率'] * (1
 ch_stat['损失金额'] = ch_stat['放款金额'] * ch_stat['损失率']
 ch_stat['FTP扣除前利润'] = ch_stat['利息收入'] - ch_stat['损失金额']
 ch_stat['FTP扣除前利润率'] = ch_stat['FTP扣除前利润'] / ch_stat['放款金额']
+
+ch_stat.to_csv('data/chopt_full.csv', encoding='utf-8')
 
 ch_stat.head()
 
